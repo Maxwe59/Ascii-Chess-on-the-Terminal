@@ -1,0 +1,1 @@
+C:\Users\max59\Desktop\Projects\Ascii-Chess-on-the-Terminal\ascii_chess\target\debug\ChessAscii.exe: C:\Users\max59\Desktop\Projects\Ascii-Chess-on-the-Terminal\ascii_chess\src\board.rs C:\Users\max59\Desktop\Projects\Ascii-Chess-on-the-Terminal\ascii_chess\src\main.rs
