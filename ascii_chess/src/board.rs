@@ -156,6 +156,7 @@ impl Matrix {
                 self.switch_pieces(piece_coords,new_spot);
                 return true},
             Piece::Knight => {
+                //work github
                 let mut count = 0;
                 let mut new_spots: [(usize,usize);8] = [(0,0);8];
                 for i in 0..2{
