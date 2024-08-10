@@ -7,7 +7,7 @@ no multiplayer or ai feature
 
 
 How 2 use:
-use AWSD to toggle arrows 
+\nuse AWSD to toggle arrows 
 use SPACE to select a piece to move
 use ENTER to move piece to desired location (You must move the arrows to an appropriate position)
 if you fail to choose an appropriate spot for a piece, the piece will be deselected
