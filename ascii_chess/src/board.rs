@@ -229,8 +229,11 @@ impl Matrix {
                 }
                 //jumping over an invalid piece when moving horizontally
                 if self.arrow.0 == piece_coords.0 {
-                    let range = (self.arrow.1.min(piece_coords.1), self.arrow.1.max(piece_coords.1));
-                    for spot in range.0+1..range.1 {
+                    let range = (
+                        self.arrow.1.min(piece_coords.1),
+                        self.arrow.1.max(piece_coords.1),
+                    );
+                    for spot in range.0 + 1..range.1 {
                         if self.board[self.arrow.0][spot].piece != Piece::Null {
                             return false;
                         }
@@ -238,8 +241,11 @@ impl Matrix {
                 }
                 //jumping over an invalid piece when moving vertically
                 else if self.arrow.1 == piece_coords.1 {
-                    let range = (self.arrow.0.min(piece_coords.0), self.arrow.0.max(piece_coords.0));
-                    for spot in range.0+1..range.1 {
+                    let range = (
+                        self.arrow.0.min(piece_coords.0),
+                        self.arrow.0.max(piece_coords.0),
+                    );
+                    for spot in range.0 + 1..range.1 {
                         if self.board[spot][self.arrow.1].piece != Piece::Null {
                             return false;
                         }
@@ -250,6 +256,20 @@ impl Matrix {
             }
 
             Piece::Bishop => {
+                if self.arrow == piece_coords {
+                    return false;
+                }
+                if self.taking_team_piece(piece_type.colour, self.arrow) {
+                    return false;
+                }
+                if self.arrow.0 + self.arrow.1 != piece_coords.0 + piece_coords.1
+                    && self.arrow.0 - self.arrow.1 != piece_coords.0 - piece_coords.1
+                {
+                    return false;
+                }
+                //disable bishop piece hopping
+
+                self.switch_pieces(piece_coords, self.arrow);
                 return true;
             }
             Piece::Queen => {
@@ -274,6 +294,21 @@ impl Matrix {
         self.pawn_layout(6, Colour::Black);
         self.piece_layout(0, Colour::White);
         self.piece_layout(7, Colour::Black);
+    }
+
+    pub fn mutate_arrow(&mut self, displace: (i32, i32)) {
+        if self.arrow.0 == 7 && displace.0 > 0 {
+            self.arrow.0 = 0;
+        } else if self.arrow.0 == 0 && displace.0 < 0 {
+            self.arrow.0 = 7;
+        } else if self.arrow.1 == 7 && displace.1 > 0 {
+            self.arrow.1 = 0;
+        } else if self.arrow.1 == 0 && displace.1 < 0 {
+            self.arrow.1 = 7;
+        } else {
+            self.arrow.0 = (self.arrow.0 as i32 + displace.0) as usize;
+            self.arrow.1 = (self.arrow.1 as i32 + displace.1) as usize;
+        }
     }
 
     pub fn display(&mut self) {

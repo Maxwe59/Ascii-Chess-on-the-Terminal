@@ -1,5 +1,5 @@
 mod board;
-use board::{Matrix};
+use board::Matrix;
 use crossterm::event::{read, Event, KeyCode, KeyEventKind};
 
 fn main() {
@@ -21,19 +21,19 @@ fn main() {
                 }
                 match key_event.code {
                     KeyCode::Char('a') => {
-                        chess_board.arrow.1 -= 1;
+                        chess_board.mutate_arrow((0, -1));
                         update_terminal(&mut chess_board);
                     }
                     KeyCode::Char('d') => {
-                        chess_board.arrow.1 += 1;
+                        chess_board.mutate_arrow((0, 1));
                         update_terminal(&mut chess_board);
                     }
                     KeyCode::Char('w') => {
-                        chess_board.arrow.0 -= 1;
+                        chess_board.mutate_arrow((-1, 0));
                         update_terminal(&mut chess_board);
                     }
                     KeyCode::Char('s') => {
-                        chess_board.arrow.0 += 1;
+                        chess_board.mutate_arrow((1, 0));
                         update_terminal(&mut chess_board);
                     }
                     KeyCode::Char(' ') => {
