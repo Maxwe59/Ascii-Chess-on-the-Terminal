@@ -1,13 +1,11 @@
 mod board;
-use board::{BlockData, Matrix};
-use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyEventKind};
-
-
+use board::{Matrix};
+use crossterm::event::{read, Event, KeyCode, KeyEventKind};
 
 fn main() {
     print!("\x1B[2J"); //clears terminal
     print!("\x1B[H"); //move cursor top left
-    
+
     let mut select_mode: bool = false;
     let mut chess_board = Matrix::new(); //generates board with no pieces
     chess_board.populate_pieces(); //populates board with pieces
@@ -15,12 +13,11 @@ fn main() {
 
     loop {
         let input = read();
-        match input{
+        match input {
             //github wiork
             Ok(Event::Key(key_event)) => {
                 if key_event.kind == KeyEventKind::Release {
                     continue;
-
                 }
                 match key_event.code {
                     KeyCode::Char('a') => {
@@ -43,31 +40,25 @@ fn main() {
                         chess_board.select_piece();
                         select_mode = true;
                         //selection mode, select piece and append to an appropriate coordinate to move the piece
-                        
                     }
-                    KeyCode::Enter => { 
-                        //PROBLEM: move arrows to place you want to move, 
-                        if select_mode{
+                    KeyCode::Enter => {
+                        //PROBLEM: move arrows to place you want to move,
+                        if select_mode {
                             select_mode = chess_board.movement(chess_board.selected_piece);
                             update_terminal(&mut chess_board);
                         }
-                        
-                           
                     }
-                    
+
                     KeyCode::Esc => break,
                     _ => {}
                 }
-            },
-            _=> {}
+            }
+            _ => {}
         }
     }
 }
 
-
-    
-
-fn show_keybinds(){
+fn show_keybinds() {
     println!("Useful Keybinds: ");
     println!("Move keys: AWSD");
     println!("Move piece: Enter");
@@ -83,7 +74,7 @@ fn update_terminal(ref_board: &mut Matrix) {
     //println!("");
 }
 
-fn welcome(){
+fn welcome() {
     println!("Welcome to Ascii Chess on the Terminal. Press any key to begin");
     show_keybinds();
 }
