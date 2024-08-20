@@ -1,10 +1,12 @@
 mod board;
 use board::Matrix;
+use colored::*;
 use crossterm::event::{read, Event, KeyCode, KeyEventKind};
+use std::io;
+use std::process;
 
 fn main() {
-    print!("\x1B[2J"); //clears terminal
-    print!("\x1B[H"); //move cursor top left
+    welcome();
 
     let mut select_mode: bool = false;
     let mut chess_board = Matrix::new(); //generates board with no pieces
@@ -17,7 +19,11 @@ fn main() {
             //github wiork
             Ok(Event::Key(key_event)) => {
                 if key_event.kind == KeyEventKind::Release {
-                    continue;
+                    match key_event.code {
+                        _ => {
+                            continue;
+                        }
+                    }
                 }
                 match key_event.code {
                     KeyCode::Char('a') => {
@@ -48,6 +54,10 @@ fn main() {
                             update_terminal(&mut chess_board);
                         }
                     }
+                    KeyCode::Char('k') => {
+                        update_terminal(&mut chess_board);
+                        show_keybinds();
+                    }
 
                     KeyCode::Esc => break,
                     _ => {}
@@ -59,11 +69,12 @@ fn main() {
 }
 
 fn show_keybinds() {
-    println!("Useful Keybinds: ");
-    println!("Move keys: AWSD");
-    println!("Move piece: Enter");
-    println!("Select piece to move: Space");
-    println!("Quit game: Esc");
+    println!("  Useful Keybinds: ");
+    println!("  Move keys: {}", "AWSD".red());
+    println!("  Move piece: {}", "Enter".red());
+    println!("  Select piece to move: {}", "Space".red());
+    println!("  Quit game: {}", "Esc".red());
+    println!("  Show keybinds: {}", "K".red());
 }
 
 fn update_terminal(ref_board: &mut Matrix) {
@@ -75,6 +86,27 @@ fn update_terminal(ref_board: &mut Matrix) {
 }
 
 fn welcome() {
-    println!("Welcome to Ascii Chess on the Terminal. Press any key to begin");
+    print!("\x1B[2J"); //clears terminal
+    print!("\x1B[H"); //move cursor top left
+
+    let mut input = String::new();
+    println!(
+        "{}{}{}{}{}",
+        "Welcome to Ascii Chess on the Terminal. Press ".blue(),
+        "<Enter>".red(),
+        " key to begin, Type ".blue(),
+        "'Esc'".red(),
+        " to Leave".blue()
+    );
     show_keybinds();
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+
+    if input.trim() == "Esc" {
+        process::exit(0);
+    }
+
+    print!("\x1B[2J"); //clears terminal
+    print!("\x1B[H"); //move cursor top left
 }

@@ -2,6 +2,7 @@ pub struct Matrix {
     pub board: [[BlockData; 8]; 8],
     pub arrow: (usize, usize),
     pub selected_piece: (usize, usize),
+    pub turn: Colour
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -112,6 +113,7 @@ impl Matrix {
             board: board,
             arrow: (7, 0),
             selected_piece: (7, 0),
+            turn: Colour::White
         }
     }
 
@@ -214,9 +216,27 @@ impl Matrix {
         }
     }
 
+
+    fn toggle_turn(&mut self){
+        if self.turn == Colour::Black{
+            self.turn = Colour::White;
+        }
+        else if self.turn == Colour::White{
+            self.turn = Colour::Black;
+        }
+        else{
+            self.turn = Colour::Null;
+        }
+    }
+
     pub fn movement(&mut self, piece_coords: (usize, usize)) -> bool {
         //returns true if movement was a success, false if piece failed to move
         let piece_type = self.board[piece_coords.0][piece_coords.1];
+        //check if it is the selected piece's colors turn to go
+        if !(piece_type.colour == self.turn){
+            return false;
+        }
+
         match piece_type.piece {
             Piece::Pawn => {
                 //validate if spot jumping to is occupied by friendly piece
@@ -298,6 +318,7 @@ impl Matrix {
                 }
 
                 self.switch_pieces(piece_coords, self.arrow);
+                self.toggle_turn();
                 return true;
             }
             Piece::Knight => {
@@ -337,6 +358,7 @@ impl Matrix {
                     return false;
                 } else {
                     self.switch_pieces(piece_coords, self.arrow);
+                    self.toggle_turn();
                     return true;
                 }
             }
@@ -359,6 +381,7 @@ impl Matrix {
                 }
 
                 self.switch_pieces(piece_coords, self.arrow);
+                self.toggle_turn();
                 return true;
             }
 
@@ -380,12 +403,40 @@ impl Matrix {
                     return false;
                 }
                 self.switch_pieces(piece_coords, self.arrow);
+                self.toggle_turn();
                 return true;
             }
             Piece::Queen => {
+                if self.arrow == piece_coords {
+                    return false;
+                }
+                if !self.validate_friend(piece_type.colour, self.arrow) {
+                    return false;
+                }
+                if !self.check_piece_hop(piece_coords, self.arrow) {
+                    return false;
+                }
+
+                self.switch_pieces(piece_coords, self.arrow);
+                self.toggle_turn();
                 return true;
             }
             Piece::King => {
+                if self.arrow == piece_coords {
+                    return false;
+                }
+                if !self.validate_friend(piece_type.colour, self.arrow) {
+                    return false;
+                }
+                if !(self.arrow.0==piece_coords.0+1 || self.arrow.0 as i32 ==piece_coords.0 as i32-1 || self.arrow.0 == piece_coords.0){
+                    return false;
+                }
+                if !(self.arrow.1==piece_coords.1+1 || self.arrow.1 as i32 ==piece_coords.1 as i32 -1 || self.arrow.1 == piece_coords.1){
+                    return false;
+                }
+
+                self.switch_pieces(piece_coords, self.arrow);
+                self.toggle_turn();
                 return true;
             }
 

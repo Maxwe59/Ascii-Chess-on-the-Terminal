@@ -1,3 +1,7 @@
+final implimentations:
+turn pawn into different piece when reaching end of board
+checkmate and casting check?
 
-pawn kill enemy
+organization:
 organize program-> seperate files
+track what color can go for turns
