@@ -139,15 +139,63 @@ impl Matrix {
         self.board[piece_moved.0][piece_moved.1] = new_blockdata;
     }
 
-    //checks if a piece is taking its teammate (True==taking its teammate, false==valid movement)
-    fn taking_team_piece(&self, piece_team: Colour, move_coords: (usize, usize)) -> bool {
+    //checks if a piece is taking its teammate (false==taking its teammate, true==valid movement)
+    fn validate_friend(&self, piece_team: Colour, move_coords: (usize, usize)) -> bool {
         let spot_info = self.board[move_coords.0][move_coords.1];
         if spot_info.piece == Piece::Null {
-            return false;
+            //if the spot piece is jumping to is a tile
+            return true;
         }
         if spot_info.colour == piece_team {
-            return true;
+            return false;
         } else {
+            return true;
+        }
+    }
+
+    //returns false if piece hop is invalid, true if piece hop is valid.
+    //only use for bishop, rook, and queen 
+    fn check_piece_hop(&self, piece_coords: (usize, usize), move_coords: (usize, usize)) -> bool {
+        //checks if piece is moving straight horizontally or vertically
+        if piece_coords.0==move_coords.0 || piece_coords.1==move_coords.1{
+            let mut range: (usize, usize,bool) = (0,0,false); //bool determines vertical or horizontal movement 
+            if piece_coords.0==move_coords.0{
+                range.0 = piece_coords.1.min(move_coords.1);
+                range.1 = piece_coords.1.max(move_coords.1);
+                range.2 = false; //false for horizontal movement
+            }
+            else if piece_coords.1 == move_coords.1{
+                range.0 = piece_coords.0.min(move_coords.0);
+                range.1 = piece_coords.0.max(move_coords.0);
+                range.2 = true; //true for vertical movement
+            }
+            else{ 
+                return false;
+            }
+            for index in range.0+1..range.1{
+                let spot = self.board[if range.2{index} else {piece_coords.0}][if range.2{piece_coords.1} else {index}];
+                if spot.piece!=Piece::Null{
+                    return false;
+                }
+            }       
+          return true;
+            
+        }
+        //checks if piece is moving in a diagnol fashion
+        else if (piece_coords.0+piece_coords.1) == (move_coords.0+move_coords.1) || (piece_coords.1 as i32 -piece_coords.0 as i32) == (move_coords.1 as i32-move_coords.0 as i32) {
+            let range_x: (usize,usize) = (piece_coords.0.min(move_coords.0),piece_coords.0.max(move_coords.0));
+            let range_y: (usize,usize) = (if piece_coords.0==range_x.0{piece_coords.1} else{move_coords.1}, if piece_coords.0==range_x.1{piece_coords.1}else{move_coords.1});
+            let mut count = if range_y.0<range_y.1{1} else{-1};
+            for index in range_x.0+1..range_x.1{
+                let spot: BlockData = self.board[index][(range_y.0 as i32 + count) as usize];
+                count += if range_y.0<range_y.1{1} else{-1};
+                if spot.piece != Piece::Null{
+                    return false;
+                }
+            }
+            return true;
+        }
+        else{
             return false;
         }
     }
@@ -157,25 +205,64 @@ impl Matrix {
         let piece_type = self.board[piece_coords.0][piece_coords.1];
         match piece_type.piece {
             Piece::Pawn => {
-                if self.taking_team_piece(piece_type.colour, self.arrow) {
+                //validate if spot jumping to is occupied by friendly piece 
+                if !self.validate_friend(piece_type.colour, self.arrow) {
                     return false;
                 }
-                let new_spot = (
-                    if piece_type.colour == Colour::Black {
-                        piece_coords.0 - 1
-                    } else {
-                        piece_coords.0 + 1
-                    },
-                    piece_coords.1,
-                );
-                if new_spot != self.arrow {
+                //creates a list of 4 possible spots pawn can move
+                let mut valid_spots: [(i32,i32);4] = [(0,0);4]; 
+                //typecasting piece and arrow coords to i32 because usize doesnt support negatives and i'm too lazy to create a custom exception
+                let temp_coords: (i32,i32) = (piece_coords.0 as i32, piece_coords.1 as i32);
+                let temp_arrow: (i32,i32) = (self.arrow.0 as i32, self.arrow.1 as i32);
+                //one spot straight ahead
+                valid_spots[0] = (if piece_type.colour == Colour::Black {temp_coords.0-1} else {temp_coords.0+1}, temp_coords.1);
+                //two spots ahead
+                valid_spots[1] = (if piece_type.colour == Colour::Black {temp_coords.0-2} else {temp_coords.0+2}, temp_coords.1);
+                //to the right and to the left, taking an enemy piece
+                valid_spots[2] = if piece_type.colour == Colour::Black {(temp_coords.0-1, temp_coords.1+1)} else {(temp_coords.0+1, temp_coords.1+1)};
+                valid_spots[3] = if piece_type.colour == Colour::Black {(temp_coords.0-1, temp_coords.1-1)} else {(temp_coords.0+1, temp_coords.1-1)};
+
+                //check if new spot is not an option in the valid_spots list
+                if !valid_spots.contains(&temp_arrow){
+
                     return false;
                 }
+
+                //validate if there is an empty slot when moving diagnoly
+                if temp_arrow==valid_spots[2] || temp_arrow==valid_spots[3]{
+                    if self.board[self.arrow.0][self.arrow.1].piece == Piece::Null{
+                        return false;
+                    }
+                }
+
+                //validate if there is a piece in front of the pawn when moving straight
+                if temp_arrow==valid_spots[0]{
+                    if self.board[self.arrow.0][self.arrow.1].piece != Piece::Null{
+                        return false;
+                    }
+                }
+
+                //validate conditions for jumping 2 spaces (no space in between, first pawn movement for instance)
+                if temp_arrow==valid_spots[1]{
+                    if piece_coords.0 != 6 && piece_type.colour==Colour::Black{
+                        return false;
+                    }
+                    if piece_coords.0 != 1 && piece_type.colour==Colour::White{
+                        return false;
+                    }
+                    if self.board[if Colour::Black == piece_type.colour{piece_coords.0-1} else {piece_coords.0+1}][piece_coords.1].piece != Piece::Null{
+                        return false;
+                    }
+
+
+                }
+
+                
                 self.switch_pieces(piece_coords, self.arrow);
                 return true;
             }
             Piece::Knight => {
-                if self.taking_team_piece(piece_type.colour, self.arrow) {
+                if !self.validate_friend(piece_type.colour, self.arrow) {
                     return false;
                 }
                 let mut new_spots: [(usize, usize); 8] = [(0, 0); 8];
@@ -220,37 +307,18 @@ impl Matrix {
                     return false;
                 }
                 //taking friendly piece
-                if self.taking_team_piece(piece_type.colour, self.arrow) {
+                if !self.validate_friend(piece_type.colour, self.arrow) {
                     return false;
                 }
                 //trying to move to a tile either not in the same x plane or y plane
                 if self.arrow.0 != piece_coords.0 && self.arrow.1 != piece_coords.1 {
                     return false;
                 }
-                //jumping over an invalid piece when moving horizontally
-                if self.arrow.0 == piece_coords.0 {
-                    let range = (
-                        self.arrow.1.min(piece_coords.1),
-                        self.arrow.1.max(piece_coords.1),
-                    );
-                    for spot in range.0 + 1..range.1 {
-                        if self.board[self.arrow.0][spot].piece != Piece::Null {
-                            return false;
-                        }
-                    }
+                //invalidating false jumps over extra pieces
+                if !self.check_piece_hop(piece_coords, self.arrow){
+                    return false;
                 }
-                //jumping over an invalid piece when moving vertically
-                else if self.arrow.1 == piece_coords.1 {
-                    let range = (
-                        self.arrow.0.min(piece_coords.0),
-                        self.arrow.0.max(piece_coords.0),
-                    );
-                    for spot in range.0 + 1..range.1 {
-                        if self.board[spot][self.arrow.1].piece != Piece::Null {
-                            return false;
-                        }
-                    }
-                }
+                
                 self.switch_pieces(piece_coords, self.arrow);
                 return true;
             }
@@ -259,16 +327,18 @@ impl Matrix {
                 if self.arrow == piece_coords {
                     return false;
                 }
-                if self.taking_team_piece(piece_type.colour, self.arrow) {
+                if !self.validate_friend(piece_type.colour, self.arrow) {
                     return false;
                 }
                 if self.arrow.0 + self.arrow.1 != piece_coords.0 + piece_coords.1
-                    && self.arrow.0 - self.arrow.1 != piece_coords.0 - piece_coords.1
+                    && self.arrow.0 as i32 - self.arrow.1 as i32 != piece_coords.0 as i32 - piece_coords.1 as i32
                 {
                     return false;
                 }
                 //disable bishop piece hopping
-
+                if !self.check_piece_hop(piece_coords,self.arrow){
+                    return false;
+                }
                 self.switch_pieces(piece_coords, self.arrow);
                 return true;
             }
