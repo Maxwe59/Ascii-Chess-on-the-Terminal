@@ -1,2 +1,8 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+
+# Exclude Makefiles from language statistics
+Makefile linguist-vendored
+
+# Exclude LLVM-related files from language statistics
+*.ll linguist-vendored
+*.bc linguist-vendored
