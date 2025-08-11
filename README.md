@@ -1,9 +1,11 @@
 # Ascii Chess on the Terminal
- Exactly what the title implies
 
-Features:
->arrow keys to toggle row and collumns and select a piece
->no multiplayer or ai feature
+### Features:
+> Fully implemented chess, standard piece rule-restrictions (no piece hopping, piece movement enforcement, turn restrictments)
+
+> arrow keys to toggle row and collumns and select a piece (controled by user inputs AWSD), press enter to select a piece, enter a second time to move to the desired location
+
+> no multiplayer or ai feature, purely singleplayer.
 
 
 How 2 use:
